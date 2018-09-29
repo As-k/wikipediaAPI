@@ -3,6 +3,8 @@ package in.cioc.searchonwikipedia;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -15,6 +17,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
@@ -60,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-
         toggle.setDrawerIndicatorEnabled(false);
         Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_arrow_back_white_24dp, getApplicationContext().getTheme());
         toggle.setHomeAsUpIndicator(drawable);
@@ -70,9 +72,12 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         });
-
         inti();
-
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        if (ni == null) {
+            Toast.makeText(mContext, "No Internet Connection", Toast.LENGTH_SHORT).show();
+        }
     }
 
     void inti(){
@@ -81,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerViewAdapter= new SearchRecyclerViewAdapter(pageList);
         searchResultRecyclerView.setAdapter(recyclerViewAdapter);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -96,12 +100,48 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
+                String url = "https://en.wikipedia.org//w/api.php?action=query" +
+                        "&format=json&prop=pageimages%7Cpageterms&generator=prefixsearch&redirects=1" +
+                        "&formatversion=2&piprop=thumbnail&pithumbsize=50&pilimit=10&wbptterms=description&gpssearch="+s+"&gpslimit=10";
+                pageList.clear();
+                recyclerViewAdapter.clearData();
+                httpClient.get(url, new JsonHttpResponseHandler(){
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                        super.onSuccess(statusCode, headers, response);
+                        try {
+//                            response.getBoolean("batchcomplete");
+//                            response.getJSONObject("continue");
+                            JSONObject queryObj = response.getJSONObject("query");
+//                            queryObj.getJSONArray("redirects");
+                            JSONArray pagesArr = queryObj.getJSONArray("pages");
+                            for (int i=0; i<pagesArr.length(); i++){
+                                JSONObject pageObj = pagesArr.getJSONObject(i);
+                                Page page = new Page(pageObj);
+                                pageList.add(page);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                recyclerViewAdapter.notifyDataSetChanged();
+                            }
+                        }, 200);
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                        super.onFailure(statusCode, headers, throwable, errorResponse);
+                        Log.d( "onFailure", "statusCode : "+statusCode);
+                    }
+                });
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String s) {
-
                 String url = "https://en.wikipedia.org//w/api.php?action=query" +
                         "&format=json&prop=pageimages%7Cpageterms&generator=prefixsearch&redirects=1" +
                         "&formatversion=2&piprop=thumbnail&pithumbsize=50&pilimit=10&wbptterms=description&gpssearch="+s+"&gpslimit=10";
@@ -136,15 +176,9 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                        super.onFailure(statusCode, headers, responseString, throwable);
-                        Toast.makeText(MainActivity.this, "onFailure "+statusCode, Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                         super.onFailure(statusCode, headers, throwable, errorResponse);
-                        Toast.makeText(MainActivity.this, "onFailure obj "+statusCode, Toast.LENGTH_SHORT).show();
+                        Log.d( "onFailure", "statusCode : "+statusCode);
                     }
                 });
 
