@@ -1,4 +1,4 @@
-package in.cioc.searchonwikipedia;
+package in.aks.searchonwikipedia.view;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -9,6 +9,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+
+import in.aks.searchonwikipedia.R;
 
 public class WebViewActivity extends AppCompatActivity {
     WebView webView;

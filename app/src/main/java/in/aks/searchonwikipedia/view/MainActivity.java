@@ -1,13 +1,11 @@
-package in.cioc.searchonwikipedia;
+package in.aks.searchonwikipedia.view;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,17 +16,11 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.view.View;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
@@ -40,25 +32,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
+import in.aks.searchonwikipedia.R;
+import in.aks.searchonwikipedia.model.Page;
 
 public class MainActivity extends AppCompatActivity {
-    public static Context mContext;
-    RecyclerView searchResultRecyclerView;
-    SearchRecyclerViewAdapter recyclerViewAdapter;
-    List<Page> pageList;
-    AsyncHttpClient httpClient;
+    private Context mContext;
+    private SearchRecyclerViewAdapter recyclerViewAdapter;
+    private List<Page> pageList;
+    private AsyncHttpClient httpClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mContext = MainActivity.this;
         pageList = new ArrayList<>();
         httpClient = new AsyncHttpClient();
 
-        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout_main);
+        /*final DrawerLayout drawer = findViewById(R.id.drawer_layout_main);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
@@ -71,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 finish();
             }
-        });
+        });*/
         inti();
         ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
@@ -80,10 +73,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void inti(){
-        searchResultRecyclerView = findViewById(R.id.search_items);
+    void inti() {
+        RecyclerView searchResultRecyclerView = findViewById(R.id.search_items);
         searchResultRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerViewAdapter= new SearchRecyclerViewAdapter(pageList);
+        recyclerViewAdapter = new SearchRecyclerViewAdapter(mContext, pageList);
         searchResultRecyclerView.setAdapter(recyclerViewAdapter);
     }
 
@@ -94,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         MenuItem searchItem = menu.getItem(0);
         SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setIconified(false);
-        searchView.setIconifiedByDefault(true );
+        searchView.setIconifiedByDefault(true);
         searchItem.expandActionView();
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -102,10 +95,10 @@ public class MainActivity extends AppCompatActivity {
             public boolean onQueryTextSubmit(String s) {
                 String url = "https://en.wikipedia.org//w/api.php?action=query" +
                         "&format=json&prop=pageimages%7Cpageterms&generator=prefixsearch&redirects=1" +
-                        "&formatversion=2&piprop=thumbnail&pithumbsize=50&pilimit=10&wbptterms=description&gpssearch="+s+"&gpslimit=10";
+                        "&formatversion=2&piprop=thumbnail&pithumbsize=50&pilimit=10&wbptterms=description&gpssearch=" + s + "&gpslimit=10";
                 pageList.clear();
                 recyclerViewAdapter.clearData();
-                httpClient.get(url, new JsonHttpResponseHandler(){
+                httpClient.get(url, new JsonHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                         super.onSuccess(statusCode, headers, response);
@@ -115,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                             JSONObject queryObj = response.getJSONObject("query");
 //                            queryObj.getJSONArray("redirects");
                             JSONArray pagesArr = queryObj.getJSONArray("pages");
-                            for (int i=0; i<pagesArr.length(); i++){
+                            for (int i = 0; i < pagesArr.length(); i++) {
                                 JSONObject pageObj = pagesArr.getJSONObject(i);
                                 Page page = new Page(pageObj);
                                 pageList.add(page);
@@ -134,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                         super.onFailure(statusCode, headers, throwable, errorResponse);
-                        Log.d( "onFailure", "statusCode : "+statusCode);
+                        Log.d("onFailure", "statusCode : " + statusCode);
                     }
                 });
                 return false;
@@ -144,10 +137,10 @@ public class MainActivity extends AppCompatActivity {
             public boolean onQueryTextChange(String s) {
                 String url = "https://en.wikipedia.org//w/api.php?action=query" +
                         "&format=json&prop=pageimages%7Cpageterms&generator=prefixsearch&redirects=1" +
-                        "&formatversion=2&piprop=thumbnail&pithumbsize=50&pilimit=10&wbptterms=description&gpssearch="+s+"&gpslimit=10";
+                        "&formatversion=2&piprop=thumbnail&pithumbsize=50&pilimit=10&wbptterms=description&gpssearch=" + s + "&gpslimit=10";
                 pageList.clear();
                 recyclerViewAdapter.clearData();
-                httpClient.get(url, new JsonHttpResponseHandler(){
+                httpClient.get(url, new JsonHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                         super.onSuccess(statusCode, headers, response);
@@ -157,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
                             JSONObject queryObj = response.getJSONObject("query");
 //                            queryObj.getJSONArray("redirects");
                             JSONArray pagesArr = queryObj.getJSONArray("pages");
-                            for (int i=0; i<pagesArr.length(); i++){
+                            for (int i = 0; i < pagesArr.length(); i++) {
                                 JSONObject pageObj = pagesArr.getJSONObject(i);
                                 Page page = new Page(pageObj);
                                 pageList.add(page);
@@ -178,10 +171,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                         super.onFailure(statusCode, headers, throwable, errorResponse);
-                        Log.d( "onFailure", "statusCode : "+statusCode);
+                        Log.d("onFailure", "statusCode : " + statusCode);
                     }
                 });
-
                 return false;
             }
         });
@@ -199,69 +191,5 @@ public class MainActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-
-    public static class SearchRecyclerViewAdapter extends RecyclerView.Adapter<SearchRecyclerViewAdapter.ViewHolder> {
-        List<Page> pageList;
-
-
-        public static class ViewHolder extends RecyclerView.ViewHolder {
-            LinearLayout mLayoutItem;
-            TextView title, description;
-            ImageView titleImage;
-
-            public ViewHolder(@NonNull View itemView) {
-                super(itemView);
-                mLayoutItem = itemView.findViewById(R.id.layout_search_items);
-                title = itemView.findViewById(R.id.name);
-                description = itemView.findViewById(R.id.description);
-                titleImage = itemView.findViewById(R.id.title_image);
-            }
-        }
-
-
-        public SearchRecyclerViewAdapter(List<Page> pages){
-            this.pageList = pages;
-        }
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_search_items, parent, false);
-            return new SearchRecyclerViewAdapter.ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            final Page page = pageList.get(position);
-
-            Glide.with(mContext)
-                    .load(page.getSource())
-                    .into(holder.titleImage);
-
-            holder.title.setText(page.getTitle());
-            holder.description.setText(page.getLitleDescription());
-
-            holder.mLayoutItem.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mContext.startActivity(new Intent(mContext, WebViewActivity.class)
-                        .putExtra("title", page.getTitle()));
-
-                }
-            });
-
-        }
-
-        @Override
-        public int getItemCount() {
-            return pageList.size();
-        }
-
-        public void clearData() {
-            pageList.clear();
-            notifyDataSetChanged();
-        }
-    }
-
 
 }

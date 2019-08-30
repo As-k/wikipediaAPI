@@ -1,4 +1,4 @@
-package in.cioc.searchonwikipedia;
+package in.aks.searchonwikipedia.model;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -9,34 +9,38 @@ import org.json.JSONObject;
  */
 
 public class Page {
-    public int pageid, ns, width, index,height;
-    public String title, source, litleDescription;
-    JSONObject jsonObject;
+    private int pageId, ns, width, index, height;
+    private String title, source, litleDescription;
+    private JSONObject jsonObject;
 
     public Page(JSONObject jsonObject) throws JSONException {
         this.jsonObject = jsonObject;
 
-        this.pageid = jsonObject.getInt("pageid");
-        this.pageid = jsonObject.getInt("ns");
+        this.pageId = jsonObject.getInt("pageid");
+        this.pageId = jsonObject.getInt("ns");
         this.title = jsonObject.getString("title");
-        this.pageid = jsonObject.getInt("index");
+        this.pageId = jsonObject.getInt("index");
         JSONObject thumbnail = jsonObject.getJSONObject("thumbnail");
-        this.source = thumbnail.getString("source");
-        this.width = thumbnail.getInt("width");
-        this.height = thumbnail.getInt("height");
+        if (thumbnail!=null) {
+            this.source = thumbnail.getString("source");
+            this.width = thumbnail.getInt("width");
+            this.height = thumbnail.getInt("height");
+        }
         JSONObject terms = jsonObject.getJSONObject("terms");
         JSONArray description = terms.getJSONArray("description");
-        for (int i=0; i<description.length(); i++){
-            this.litleDescription = description.getString(i);
+        if (description!=null) {
+            for (int i = 0; i < description.length(); i++) {
+                this.litleDescription = description.getString(i);
+            }
         }
     }
 
-    public int getPageid() {
-        return pageid;
+    public int getPageId() {
+        return pageId;
     }
 
-    public void setPageid(int pageid) {
-        this.pageid = pageid;
+    public void setPageId(int pageId) {
+        this.pageId = pageId;
     }
 
     public int getNs() {

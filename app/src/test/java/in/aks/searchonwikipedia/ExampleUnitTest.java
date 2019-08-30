@@ -1,4 +1,4 @@
-package in.cioc.searchonwikipedia;
+package in.aks.searchonwikipedia;
 
 import org.junit.Test;
 

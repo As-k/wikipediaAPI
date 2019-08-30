@@ -1,4 +1,4 @@
-package com.aks.imageloader;
+package in.aks.searchonwikipedia;
 
 import android.app.ActivityManager;
 import android.content.ComponentCallbacks2;
@@ -7,9 +7,10 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+import android.util.LruCache;
 import android.widget.ImageView;
-
-import androidx.collection.LruCache;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,8 +18,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class ImageLoader implements ComponentCallbacks2 {
-    private TCLruCache cache;
 
+    private TCLruCache cache;
     public ImageLoader(Context context) {
         ActivityManager activityManager = (ActivityManager) context.getSystemService(
                 Context.ACTIVITY_SERVICE);
@@ -30,13 +31,31 @@ public class ImageLoader implements ComponentCallbacks2 {
         }
     }
 
-    public void display(String url, ImageView imageview, int defaultresource) {
-        imageview.setImageResource(defaultresource);
+    public void display(String url, ImageView imageview, int defaultResource) {
+        imageview.setImageResource(defaultResource);
         Bitmap image = cache.get(url);
         if (image != null) {
             imageview.setImageBitmap(image);
         } else {
             new SetImageTask(imageview).execute(url);
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+    }
+
+    @Override
+    public void onLowMemory() {
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
+    @Override
+    public void onTrimMemory(int level) {
+        if (level >= TRIM_MEMORY_MODERATE) {
+            cache.evictAll();
+        } else if (level >= TRIM_MEMORY_BACKGROUND) {
+            cache.trimToSize(cache.size() / 2);
         }
     }
 
@@ -53,7 +72,7 @@ public class ImageLoader implements ComponentCallbacks2 {
         }
     }
 
-    private class SetImageTask extends AsyncTask<String, Void, Integer> {
+    public class SetImageTask extends AsyncTask<String, Void, Integer> {
         private ImageView imageview;
         private Bitmap bmp;
 
@@ -101,23 +120,6 @@ public class ImageLoader implements ComponentCallbacks2 {
                 return null;
             }
         }
-
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-    }
-
-    @Override
-    public void onLowMemory() {
-    }
-
-    @Override
-    public void onTrimMemory(int level) {
-        if (level >= TRIM_MEMORY_MODERATE) {
-            cache.evictAll();
-        } else if (level >= TRIM_MEMORY_BACKGROUND) {
-            cache.trimToSize(cache.size() / 2);
-        }
-    }
 }

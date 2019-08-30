@@ -1,4 +1,4 @@
-package in.cioc.searchonwikipedia;
+package in.aks.searchonwikipedia;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
